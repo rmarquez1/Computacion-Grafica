@@ -287,7 +287,6 @@ void killDefensa(int x){
 	glutTimerFunc(45,killDefensa,2);
 }
 
-
 void doSomething(int x) {
 
 	for( vector<bala>::iterator i = VectBala.begin(); i!=VectBala.end();) {
@@ -303,7 +302,7 @@ void doSomething(int x) {
 		}
 
 	}
-	killDefensa(x);
+	//killDefensa(x);
 
 	//Este caso se usa cuando dibujamos el grupo de enemigo bajo un piso y queremos que comience a moverse en direccion contraria
 	if(movEneX == 0.0f)
