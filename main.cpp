@@ -335,6 +335,25 @@ void doSomething(int x) {
 		}
 	}
 
+	maxEneX = 0.0f;
+	glPushMatrix();
+	for(int i = 0; i < CANT_ENEMIGOS; i++) 
+	{ 
+		//Si el enemigo no ha sido golpeado por ninguna bala
+		if(VectEne[i].vivo)
+		{
+			//Calculamos la nueva posicion del enemigo
+			float posActX = VectEne[i].posX + movEneX;
+
+			//Si la posicion del enemigo actual es mayor a la maxima posicion guardada, entonces guardamos el maximo
+			if(posActX > maxEneX) maxEneX = posActX;
+			
+			VectEne[i].posX = posActX;
+		}
+	}
+
+
+
 	glutPostRedisplay();
 	glutTimerFunc(100,doSomething,1);
 }
@@ -445,23 +464,14 @@ void render(){
 	}
 	
 	//Dibujamos los enemigos
-
-	maxEneX = 0.0f;
 	glPushMatrix();
 	for(int i = 0; i < CANT_ENEMIGOS; i++) 
 	{ 
 		//Si el enemigo no ha sido golpeado por ninguna bala
 		if(VectEne[i].vivo)
 		{
-			//Calculamos la nueva posicion del enemigo
-			float posActX = VectEne[i].posX + movEneX;
-
 			//Dibujamos el enemigo en la nueva posicion
-			drawEnemy(posActX, VectEne[i].posY + movEneY);
-
-			//Si la posicion del enemigo actual es mayor a la maxima posicion guardada, entonces guardamos el maximo
-			if(posActX > maxEneX) maxEneX = posActX;
-			VectEne[i].posX = posActX;
+			drawEnemy(posActX, VectEne[i].posY);
 		}
 	}
 	glPopMatrix();
