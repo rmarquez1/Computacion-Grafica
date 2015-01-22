@@ -1,7 +1,11 @@
 #include <GL\glew.h>
 #include <GL\freeglut.h>
 #include <iostream>
+#include <stdio.h>
+#include <tchar.h>
 #include <vector>
+#include <string.h>
+#include <sstream>
 
 using namespace std;
  
@@ -24,6 +28,9 @@ int fantasmaIni = 0;
 #define VELOCIDADFANTASMA 50
 #define APARECERFANTASMA 12000
 #define DESPLAZAFANTASMA 0.01
+
+// Variable que lleva la puntuacion acumulada
+int score = 0;
 
 // Estructura para el enemigo
 struct enemigo 
@@ -371,11 +378,21 @@ bool verificarDefensa(defensa d, bala b){
 	return false;
 }
 
+bool verificarPuntoFantasma(bala b){
+	if (((nFantasma.existe) && b.posX >= (nFantasma.posX - rectX) && 
+	b.posY <= (nFantasma.posY + rectY) && b.posX <= (nFantasma.posX + rectX) && 
+	b.posY >= (nFantasma.posY - rectY))){
+		return true;
+	}
+	return false;
+}
+
 bool iterateDefensas(bala b){
 
 	for( vector<defensa>::iterator d = VectDefensa.begin(); d!=VectDefensa.end();){
 		if (verificarDefensa(*d, b)){
 			d = VectDefensa.erase(d);
+			score -= 30;
 			return true;
 		} else {
 			d++;
@@ -392,6 +409,7 @@ bool iterateEnemies(bala b){
 		bool res = verificarPunto(VectEne[i], b);
 		if (res == true) {
 			VectEne[i].shots -= 1; 
+			score += 100;
 			return true;
 		}
 	}
@@ -466,7 +484,7 @@ void apareceFantasma(int x){
 }
 
 //Movimiento de la nave alien
-void naveMueve(int x) {
+void mueveFantasma(int x) {
 
 		if (nFantasma.existe){
 			nFantasma.posX += DESPLAZAFANTASMA;
@@ -477,7 +495,20 @@ void naveMueve(int x) {
 		}
 
 	glutPostRedisplay();
-	glutTimerFunc(VELOCIDADFANTASMA,naveMueve,8);
+	glutTimerFunc(VELOCIDADFANTASMA,mueveFantasma,8);
+}
+
+// Fantasma muere por una bala de la nave
+bool muereFantasma(bala b){
+	if (nFantasma.existe){
+		if (verificarPuntoFantasma(b)){
+			nFantasma.existe = false;
+			nFantasma.posX = FANTASMAX;
+			score += 300;
+			return true;
+		}
+	}
+	return false;
 }
 
 void doSomething(int x) {
@@ -487,7 +518,7 @@ void doSomething(int x) {
 			i = VectBala.erase(i);
 		} else {
 			(*i).posY += 0.1f;
-			if (iterateEnemies(*i) || iterateDefensas(*i)) {
+			if (iterateEnemies(*i) || iterateDefensas(*i) || muereFantasma(*i)) {
 				i = VectBala.erase(i);
 			} else {
 				i++;
@@ -640,6 +671,15 @@ void drawNave() {
 	glPopMatrix();
 }
 
+// Funcion para escribir la puntuacion en pantalla
+void printScore(string text, float x, float y) {
+    glColor3f(0.0f,1.0f,0.0f);
+    glRasterPos2f(x,y);
+    for(int i = 0; i < text.length(); i++){ 
+        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text.data()[i]);
+    }
+}
+
 void render(){
     //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -716,6 +756,11 @@ void render(){
 	// Nave Alien
 	if (nFantasma.existe)	drawFantasma();
 
+		// Puntuacion
+	printScore("Puntaje: ", -1.5, -0.9);
+	std::string s = std::to_string(score);
+	printScore(s, -1.17, -0.9);
+
 	glPopMatrix();
     glutSwapBuffers();
 }
@@ -735,7 +780,7 @@ int main (int argc, char** argv) {
 		glutTimerFunc(100,doSomething,1);
 		glutTimerFunc(1000,disparaEnemy,10);
 		glutTimerFunc(APARECERFANTASMA,apareceFantasma,6);
-		glutTimerFunc(VELOCIDADFANTASMA,naveMueve,8);
+		glutTimerFunc(VELOCIDADFANTASMA,mueveFantasma,8);
 		
     GLenum err = glewInit();
     if (GLEW_OK != err) {
