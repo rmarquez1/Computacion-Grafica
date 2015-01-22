@@ -55,6 +55,12 @@ struct fantasma{
 	bool existe;
 };
 
+struct jugador{
+	float posX;
+	float posY;
+	bool vivo;
+};
+
 int BLUE_AXIS   = 20;
 int RED_AXIS    = -70;
 int GREEN_AXIS  = -110;
@@ -427,25 +433,25 @@ void killDefensa(int x){
 	for(int i=0; i<CANT_ENEMIGOS; i++){
 		if (VectEne[i].shots>0){
 			for( vector<defensa>::iterator d = VectDefensa.begin(); d!=VectDefensa.end();){
-				if ((*d).posX == VectEne[i].posX){
+				if (((*d).posX == VectEne[i].posX) && ((*d).posY == VectEne[i].posY)){
 					d = VectDefensa.erase(d);
+					VectEne[i].shots = 0;
+					break;
+				} else {
+					d++;
 				}
+			}
+		}
+
+		if (VectEne[i].shots>0){
+			if (verificarJugador(VectEne[i].posX, VectEne[i].posY)) {
+				jugadorVivo = false;
+				VectEne[i].shots = 0;
 			}
 		}
 		
 
 	}*/
-
-	// Muerte por bala del enemigo
-	for( int i = 0; i < CANT_ENEMIGOS; i++) {
-		if (VectBalaEnemy[i].disparo && VectBalaEnemy[i].existe){
-			if (iterateDefensas(VectBalaEnemy[i])){
-				VectBalaEnemy[i].existe = false;
-				VectBalaEnemy[i].disparo = false;
-			}
-		}
-
-	}
 
 	glutPostRedisplay();
 	glutTimerFunc(45,killDefensa,4);
@@ -545,6 +551,18 @@ void doSomething(int x) {
 			}
 			
 		}
+	}
+
+	// Muerte por bala del enemigo
+	for( int i = 0; i < CANT_ENEMIGOS; i++) {
+		if (VectBalaEnemy[i].disparo && VectBalaEnemy[i].existe){
+			if (iterateDefensas(VectBalaEnemy[i]) || 
+				verificarJugador(VectBalaEnemy[i].posX, VectBalaEnemy[i].posY)){
+				VectBalaEnemy[i].existe = false;
+				VectBalaEnemy[i].disparo = false;
+			}
+		}
+
 	}
 
 	glutPostRedisplay();
