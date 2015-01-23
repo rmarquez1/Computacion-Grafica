@@ -8,7 +8,7 @@
 #include <sstream>
 
 using namespace std;
- 
+
 #define CANT_ENEMIGOS		30
 #define CANT_DEFENSA		25
 #define INICIO_ENE_X		-1.01
@@ -29,8 +29,13 @@ int fantasmaIni = 0;
 #define APARECERFANTASMA 12000
 #define DESPLAZAFANTASMA 0.01
 
+
 // Variable que lleva la puntuacion acumulada
 int score = 0;
+
+
+// Variable que determina si la nave esta viva o no
+bool naveViva;
 
 // Estructura para el enemigo
 struct enemigo 
@@ -39,6 +44,7 @@ struct enemigo
 	float posY;
 	int   shots;
 };
+
 
 // Estructura para la posicion de las balas
 struct bala
@@ -55,17 +61,12 @@ struct defensa{
 	float posY;
 };
 
+
 // Estructura para la nave fantasma que aparece cada cierto tiempo
 struct fantasma{
 	float posX;
 	float posY;
 	bool existe;
-};
-
-struct jugador{
-	float posX;
-	float posY;
-	bool vivo;
 };
 
 int BLUE_AXIS   = 20;
@@ -84,9 +85,11 @@ float disparo = 0.0f;
 float posicionBala = -0.6f;
 float xBala = 0.0f;
 
+
 // Posiciones de la defensa
 float defensaX = 0.0 - 1.5f;
 float defensaY = 0.0 - 0.1f;
+
 
 // Mitad del bloque del enemigo
 float rectX = 0.12f;
@@ -102,22 +105,29 @@ float rectY = 0.035f;
 // Arreglo para llevar la posicion de todos los enemigos
 enemigo VectEne[CANT_ENEMIGOS];
 
+
 // Vector para llevar las balas.
 vector<bala> VectBala;
+
 
 // Arreglo para las balas enemigas
 bala VectBalaEnemy[CANT_ENEMIGOS];
 
+
 // Vector para las defensas
 vector<defensa> VectDefensa;
+
 
 // Nave Fantasma
 fantasma nFantasma = {FANTASMAX, FANTASMAY, false};
 
+
 //Booleano para llevar la direccion de los enemigos
 bool MOV_DER = true;
 
+
 float maxEneX = -5.0f;
+
 
 //Funcion para inicializar la posicion de los enemigos
 void initEnemigos()
@@ -152,6 +162,8 @@ void initEnemigos()
 	}
 }
 
+
+// Funcion para inicializar la posicion de las defensas
 void initDefensas() {
 
 	// Dibujar Defensa
@@ -202,6 +214,8 @@ void initDefensas() {
 
 }
 
+
+// Configuracion de la ventana
 void changeViewport(int w, int h) {
     glViewport(0,0,w,h);
     glMatrixMode(GL_PROJECTION);
@@ -218,6 +232,7 @@ void changeViewport(int w, int h) {
     glMatrixMode(GL_MODELVIEW);
 }
  
+
 void drawEqAnglePolygon(float centerX, float centerY, float radius, int segments){
     float theta, x, y;
     glBegin(GL_TRIANGLE_FAN);
@@ -231,6 +246,8 @@ void drawEqAnglePolygon(float centerX, float centerY, float radius, int segments
     glEnd();
 }
  
+
+// Funcion que dibuja un rectangulo
  void drawRectangle(){
 	glBegin(GL_POLYGON);
 		glVertex2f(-0.1f, 0.1f);
@@ -240,6 +257,8 @@ void drawEqAnglePolygon(float centerX, float centerY, float radius, int segments
 	glEnd();
 }
 
+
+// Funcion que dibuja una defensa
 void drawDefensa(float x, float y){
 	glBegin(GL_POLYGON);
 		glVertex2f( x, y);
@@ -249,6 +268,8 @@ void drawDefensa(float x, float y){
 	glEnd();
 }
 
+
+// Funcion que dibuja un enemigo
 void drawEnemy(float posX, float posY, int typeEnemy){
 	glPushMatrix();
 		glTranslatef(posX, posY, 0.0f);
@@ -263,6 +284,8 @@ void drawEnemy(float posX, float posY, int typeEnemy){
 	glPopMatrix();
 }
 
+
+// Funcion que dibuja la nave fantasma que aparece cada cierto tiempo n dado
 void drawFantasma() {
 	glColor3f( 0.329412,0.329412, 0.329412); 
 
@@ -274,6 +297,8 @@ void drawFantasma() {
 	glEnd();
 }
 
+
+// Funcion que dibuja un circulo
 void drawCircle(float radio, float segmentos, float grados, float inicio){
 	glBegin(GL_POLYGON);
 		float x,y,i;
@@ -288,6 +313,8 @@ void drawCircle(float radio, float segmentos, float grados, float inicio){
 	glEnd();
 }
 
+
+// MEtodo para dibujar el grid
 void drawGrid(){
  
     // GRID
@@ -347,6 +374,8 @@ void drawGrid(){
         glEnd();
 }
 
+
+// Funcion para el manejo del teclado
 void keyPressed(unsigned char key, int x, int y){
 
 	switch(key) {
@@ -362,6 +391,8 @@ void keyPressed(unsigned char key, int x, int y){
 	glutPostRedisplay();
 }
 
+
+// Funcion que dado un enemigo y una bala, verifica que este ultimo choque con el enemigo
 bool verificarPunto(enemigo e, bala b){
 	if (((e.shots > 0) && b.posX >= (e.posX - rectX) && b.posY <= (e.posY + rectY) &&
 		b.posX <= (e.posX + rectX) && b.posY >= (e.posY - rectY))){
@@ -370,6 +401,8 @@ bool verificarPunto(enemigo e, bala b){
 	return false;
 }
 
+
+// Funcion que dado una defensa y una bala, verifica que este ultimo choque con la defensa
 bool verificarDefensa(defensa d, bala b){
 	if (( b.posX >= (d.posX - rectX) && b.posY <= (d.posY + rectY) &&
 		b.posX <= (d.posX + rectX) && b.posY >= (d.posY - rectY))){
@@ -378,6 +411,8 @@ bool verificarDefensa(defensa d, bala b){
 	return false;
 }
 
+
+// Funcion que dado una bala, verifica que esta colisiona con la nave fantasma
 bool verificarPuntoFantasma(bala b){
 	if (((nFantasma.existe) && b.posX >= (nFantasma.posX - rectX) && 
 	b.posY <= (nFantasma.posY + rectY) && b.posX <= (nFantasma.posX + rectX) && 
@@ -387,6 +422,8 @@ bool verificarPuntoFantasma(bala b){
 	return false;
 }
 
+
+// Funcion que dado una bala verifica si esta choca con alguna defensa
 bool iterateDefensas(bala b){
 
 	for( vector<defensa>::iterator d = VectDefensa.begin(); d!=VectDefensa.end();){
@@ -403,6 +440,8 @@ bool iterateDefensas(bala b){
 
 }
 
+
+// Funcion que dado una bala verifica si esta choca con algun enemigo
 bool iterateEnemies(bala b){
 
 	for (int i = 0; i< CANT_ENEMIGOS ; i++){
@@ -418,6 +457,8 @@ bool iterateEnemies(bala b){
 
 }
 
+
+// Funcion que se encarga de hacer disparar a algun enemigo aleatoriamente
 void disparaEnemy(int x){
 	int enemy= rand() % CANT_ENEMIGOS;
 
@@ -432,6 +473,8 @@ void disparaEnemy(int x){
 
 }
 
+
+// Funcion que desplaza las balas enemigas
 void desplazamientoBalaEnemy(int x) {
 	
 	for (int i=0; i<CANT_ENEMIGOS; i++) {
@@ -451,30 +494,32 @@ void killDefensa(int x){
 	for(int i=0; i<CANT_ENEMIGOS; i++){
 		if (VectEne[i].shots>0){
 			for( vector<defensa>::iterator d = VectDefensa.begin(); d!=VectDefensa.end();){
-				if (((*d).posX == VectEne[i].posX) && ((*d).posY == VectEne[i].posY)){
+				if ((*d).posX == VectEne[i].posX){
 					d = VectDefensa.erase(d);
-					VectEne[i].shots = 0;
-					break;
-				} else {
-					d++;
 				}
-			}
-		}
-
-		if (VectEne[i].shots>0){
-			if (verificarJugador(VectEne[i].posX, VectEne[i].posY)) {
-				jugadorVivo = false;
-				VectEne[i].shots = 0;
 			}
 		}
 		
 
 	}*/
 
+	// Muerte por bala del enemigo
+	for( int i = 0; i < CANT_ENEMIGOS; i++) {
+		if (VectBalaEnemy[i].disparo && VectBalaEnemy[i].existe){
+			if (iterateDefensas(VectBalaEnemy[i])){
+				VectBalaEnemy[i].existe = false;
+				VectBalaEnemy[i].disparo = false;
+			}
+		}
+
+	}
+
 	glutPostRedisplay();
 	glutTimerFunc(45,killDefensa,4);
 }
 
+
+// Funcion que hace aparecer la nave fantasma en tiempo dado n
 void apareceFantasma(int x){
 
 	if (!nFantasma.existe)	nFantasma.existe = true;
@@ -482,6 +527,7 @@ void apareceFantasma(int x){
 	glutPostRedisplay();
 	glutTimerFunc(APARECERFANTASMA,apareceFantasma,6);
 }
+
 
 //Movimiento de la nave alien
 void mueveFantasma(int x) {
@@ -498,6 +544,7 @@ void mueveFantasma(int x) {
 	glutTimerFunc(VELOCIDADFANTASMA,mueveFantasma,8);
 }
 
+
 // Fantasma muere por una bala de la nave
 bool muereFantasma(bala b){
 	if (nFantasma.existe){
@@ -510,6 +557,24 @@ bool muereFantasma(bala b){
 	}
 	return false;
 }
+
+
+// Funcion que determina como perder el juego
+void gameOver(int x){
+
+}
+
+
+// Funcion que indica si se gana el juego o no
+bool Winner(){
+	// Si todos los enemigos estan muertos se gana el juego
+	for (int i = 0; i < CANT_ENEMIGOS; i++){
+		if (VectEne[i].shots == 0) continue;
+		else return false;
+		return true;
+	}
+}
+
 
 void doSomething(int x) {
 
@@ -584,23 +649,12 @@ void doSomething(int x) {
 		}
 	}
 
-	// Muerte por bala del enemigo
-	for( int i = 0; i < CANT_ENEMIGOS; i++) {
-		if (VectBalaEnemy[i].disparo && VectBalaEnemy[i].existe){
-			if (iterateDefensas(VectBalaEnemy[i]) || 
-				verificarJugador(VectBalaEnemy[i].posX, VectBalaEnemy[i].posY)){
-				VectBalaEnemy[i].existe = false;
-				VectBalaEnemy[i].disparo = false;
-			}
-		}
-
-	}
-
 	glutPostRedisplay();
 	glutTimerFunc(100,doSomething,1);
 }
 
 
+// Funcion del manejo del teclado. Botones de izquiere y derecha
 void SpecialInput(int key, int x, int y) {
 	switch(key) {
 		case GLUT_KEY_LEFT:
@@ -613,6 +667,8 @@ void SpecialInput(int key, int x, int y) {
 	glutPostRedisplay();
 }
 
+
+// Funcion que dibuja la nave del jugador
 void drawNave() {
 
 	glColor3f(0.0,1.0,0.5);
@@ -671,6 +727,7 @@ void drawNave() {
 	glPopMatrix();
 }
 
+
 // Funcion para escribir la puntuacion en pantalla
 void printScore(string text, float x, float y) {
     glColor3f(0.0f,1.0f,0.0f);
@@ -680,86 +737,91 @@ void printScore(string text, float x, float y) {
     }
 }
 
+
 void render(){
     //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPushMatrix();
-    glLoadIdentity();
-    gluLookAt(  0.0f, 0.0f, 5.0f,   // Eye position
-                0.0f, 0.0f, 0.0f,   // Look at position
-                0.0f, 1.0f, 0.0f);  // Vector up direction
+		glLoadIdentity();
+		gluLookAt(  0.0f, 0.0f, 5.0f,   // Eye position
+					0.0f, 0.0f, 0.0f,   // Look at position
+					0.0f, 1.0f, 0.0f);  // Vector up direction
  
-	drawGrid();
+		drawGrid();
 	
-	//Nave del jugador
-	glPushMatrix();
-		
-		glTranslatef(traslacionNave,-0.8f,0.0f);
-		//Cuerpo
-		glPushMatrix();
-			glScalef(3.0f,3.0f,1.0f);
-			drawNave();
-		glPopMatrix();
-
-	glPopMatrix();
-
-	//Dibujo cada bala.
-	for( vector<bala>::iterator i = VectBala.begin(); i!=VectBala.end(); i++) {
-		glPushMatrix();
-			glColor3f(1.0f,1.0f,1.0f);
-			glTranslatef((*i).posX,(*i).posY,0.0f);
-			drawCircle(0.02f,5.0f,360.0f,0.0f);
-			glColor3f(1.0f,0.35f,0.75f);
-		glPopMatrix();
-
-	}
-
-	// Dibujo las balas de cada enemigo
-	for (int i = 0; i < CANT_ENEMIGOS; i++){
-		if ((VectEne[i].shots>0) && (VectBalaEnemy[i].disparo)){
+		if (!Winner()){
+			//Nave del jugador
 			glPushMatrix();
-				glColor3f(1.0f,1.0f,0.0f);
-				glTranslatef(VectBalaEnemy[i].posX,VectBalaEnemy[i].posY,0.0f);
-				drawCircle(0.02f,5.0f,360.0f,0.0f);
-				glColor3f(1.0f,0.35f,0.75f);
+		
+				glTranslatef(traslacionNave,-0.8f,0.0f);
+				//Cuerpo
+				glPushMatrix();
+					glScalef(3.0f,3.0f,1.0f);
+					drawNave();
+				glPopMatrix();
+
 			glPopMatrix();
-		}
+
+			//Dibujo cada bala.
+			for( vector<bala>::iterator i = VectBala.begin(); i!=VectBala.end(); i++) {
+				glPushMatrix();
+					glColor3f(1.0f,1.0f,1.0f);
+					glTranslatef((*i).posX,(*i).posY,0.0f);
+					drawCircle(0.02f,5.0f,360.0f,0.0f);
+					glColor3f(1.0f,0.35f,0.75f);
+				glPopMatrix();
+
+			}
+
+			// Dibujo de las balas de cada enemigo
+			for (int i = 0; i < CANT_ENEMIGOS; i++){
+				if ((VectEne[i].shots>0) && (VectBalaEnemy[i].disparo)){
+					glPushMatrix();
+						glColor3f(1.0f,1.0f,0.0f);
+						glTranslatef(VectBalaEnemy[i].posX,VectBalaEnemy[i].posY,0.0f);
+						drawCircle(0.02f,5.0f,360.0f,0.0f);
+						glColor3f(1.0f,0.35f,0.75f);
+					glPopMatrix();
+				}
 		
 
-	}
+			}
 
-	//Dibujo las defensas.
-	for( vector<defensa>::iterator i = VectDefensa.begin(); i!=VectDefensa.end(); i++) {
-		glColor3f(0.658824, 0.658824, 0.658824);
-		drawDefensa((*i).posX, (*i).posY);
-		glColor3f(1.0f,0.35f,0.75f);
+			//Dibujo las defensas
+			for( vector<defensa>::iterator i = VectDefensa.begin(); i!=VectDefensa.end(); i++) {
+				glColor3f(0.658824, 0.658824, 0.658824);
+				drawDefensa((*i).posX, (*i).posY);
+				glColor3f(1.0f,0.35f,0.75f);
 
-	}
+			}
 	
-	//Dibujamos los enemigos
+			//Dibujamos los enemigos
+			for(int i = 0; i < CANT_ENEMIGOS; i++) 
+			{ 
+				//Si el enemigo no ha muerto
+				if(VectEne[i].shots>0)
+				{
+					float posActX = VectEne[i].posX;
 
-	for(int i = 0; i < CANT_ENEMIGOS; i++) 
-	{ 
-		//Si el enemigo no ha muerto
-		if(VectEne[i].shots>0)
-		{
-			float posActX = VectEne[i].posX;
+					//Dibujamos el enemigo en la nueva posicion
+					if (VectEne[i].shots==1){
+						drawEnemy(posActX, VectEne[i].posY, 1);
+					}else drawEnemy(posActX, VectEne[i].posY,2);
 
-			//Dibujamos el enemigo en la nueva posicion
-			if (VectEne[i].shots==1){
-				drawEnemy(posActX, VectEne[i].posY, 1);
-			}else drawEnemy(posActX, VectEne[i].posY,2);
+				}
+			}
 
+			// Nave Alien
+			if (nFantasma.existe)	drawFantasma();
 		}
-	}
-
-	// Nave Alien
-	if (nFantasma.existe)	drawFantasma();
 
 		// Puntuacion
-	printScore("Puntaje: ", -1.5, -0.9);
-	std::string s = std::to_string(score);
-	printScore(s, -1.17, -0.9);
+		printScore("Score: ", -1.5, -0.9);
+		std::string s = std::to_string(score);
+		printScore(s, -1.17, -0.9);
+
+		// Mensaje al ganar el juego
+		if (Winner()) printScore("¡YOU WIN!", -0.15, 0);
 
 	glPopMatrix();
     glutSwapBuffers();
