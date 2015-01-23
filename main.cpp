@@ -33,6 +33,11 @@ int fantasmaIni = 0;
 // Variable que lleva la puntuacion acumulada
 int score = 0;
 
+// Variable que lleva la velocidad del juego
+int velocidad = 500;
+
+// Variable que determina si el jugador esta vivo
+bool jugadorVivo = true;
 
 // Variable que determina si la nave esta viva o no
 bool naveViva;
@@ -43,6 +48,12 @@ struct enemigo
 	float posX;
 	float posY;
 	int   shots;
+};
+
+struct jugador{
+	float posX;
+	float posY;
+	bool vivo;
 };
 
 
@@ -88,7 +99,7 @@ float xBala = 0.0f;
 
 // Posiciones de la defensa
 float defensaX = 0.0 - 1.5f;
-float defensaY = 0.0 - 0.1f;
+float defensaY = 0.0 - 0.5f;
 
 
 // Mitad del bloque del enemigo
@@ -184,7 +195,7 @@ void initDefensas() {
 		if(i == 11){
 				
 			defensaX = 0.1f - 1.5f;
-			defensaY = 0.05f - 0.1f;
+			defensaY = 0.07f - 0.5f;
 		}
 
 		if(i > 11 && i < 17){
@@ -199,7 +210,7 @@ void initDefensas() {
 		//Tercera fila	
 		if(i == 18){
 			defensaX = 0.20f - 1.5f;
-			defensaY = 0.1f - 0.1f;
+			defensaY = 0.12f - 0.5f;
 		}
 
 		if(i > 18 && i < 25){    
@@ -233,17 +244,19 @@ void changeViewport(int w, int h) {
 }
  
 
-void drawEqAnglePolygon(float centerX, float centerY, float radius, int segments){
-    float theta, x, y;
-    glBegin(GL_TRIANGLE_FAN);
-        glVertex3f(centerX, centerY, 0.0);          
-        for(int i = 0; i <= segments; i++){
-            theta = 2.0f * 3.1415926f * float(i) / float(segments); // Angles
-            float x = radius * cosf(theta); //calculate the x component 
-            float y = radius * sinf(theta); //calculate the y component 
-            glVertex3f(x + centerX, y + centerY, 0.0);//output vertex 
-        }
-    glEnd();
+void drawEqAnglePolygon(float x, float y, float radio, float segmentos, float grados, float inicio){
+
+	glBegin(GL_POLYGON);
+		float x2,y2,i;
+		for (i=0.0f; i<=segmentos; i++) {
+			float t = (2.0f*grados/360.0f) * 3.1415926f * i/segmentos;
+			float t2 = (2.0f*inicio/360.0f) * 3.1415926f;
+			x2 = radio * cos(t+t2); //Ecuaciones paramétricas
+			y2 = radio * sin(t+t2);
+			glVertex2f(x+x2,y+y2);
+		}
+	glEnd();
+
 }
  
 
@@ -262,8 +275,8 @@ void drawEqAnglePolygon(float centerX, float centerY, float radius, int segments
 void drawDefensa(float x, float y){
 	glBegin(GL_POLYGON);
 		glVertex2f( x, y);
-		glVertex2f( x, 0.03f + y);
-		glVertex2f(0.11f + x, 0.03f + y );
+		glVertex2f( x, 0.07f + y);
+		glVertex2f(0.11f + x, 0.07f + y );
 		glVertex2f(0.11f + x,  y );
 	glEnd();
 }
@@ -285,18 +298,6 @@ void drawEnemy(float posX, float posY, int typeEnemy){
 }
 
 
-// Funcion que dibuja la nave fantasma que aparece cada cierto tiempo n dado
-void drawFantasma() {
-	glColor3f( 0.329412,0.329412, 0.329412); 
-
-	glBegin(GL_POLYGON);
-		glVertex3f(nFantasma.posX - XARECTANGLE, nFantasma.posY + YARECTANGLE, 0.0f );		
-		glVertex3f(nFantasma.posX + XARECTANGLE, nFantasma.posY + YARECTANGLE, 0.0f );		
-		glVertex3f(nFantasma.posX + XARECTANGLE, nFantasma.posY - YARECTANGLE, 0.0f );		
-		glVertex3f(nFantasma.posX - XARECTANGLE, nFantasma.posY - YARECTANGLE, 0.0f );		
-	glEnd();
-}
-
 
 // Funcion que dibuja un circulo
 void drawCircle(float radio, float segmentos, float grados, float inicio){
@@ -312,6 +313,35 @@ void drawCircle(float radio, float segmentos, float grados, float inicio){
 
 	glEnd();
 }
+
+
+// Funcion que dibuja la nave fantasma que aparece cada cierto tiempo n dado
+void drawFantasma() {
+	
+	glColor3f( 0.0,1.0, 1.0);
+	drawEqAnglePolygon(nFantasma.posX+XARECTANGLE-0.05,nFantasma.posY+YARECTANGLE, 0.05, 60, 180,0 );
+
+	glColor3f( 0.329412,0.329412, 0.329412); 
+	glBegin(GL_POLYGON);
+		glVertex3f(nFantasma.posX - XARECTANGLE, nFantasma.posY + YARECTANGLE, 0.0f );		
+		glVertex3f(nFantasma.posX + XARECTANGLE, nFantasma.posY + YARECTANGLE, 0.0f );		
+		glVertex3f(nFantasma.posX + XARECTANGLE, nFantasma.posY - YARECTANGLE, 0.0f );		
+		glVertex3f(nFantasma.posX - XARECTANGLE, nFantasma.posY - YARECTANGLE, 0.0f );		
+	glEnd();
+
+	glBegin(GL_POLYGON);
+		glVertex3f(nFantasma.posX - XARECTANGLE,nFantasma.posY + YARECTANGLE, 0.0f );				
+		glVertex3f(nFantasma.posX - XARECTANGLE, nFantasma.posY - YARECTANGLE, 0.0f );
+		glVertex3f(nFantasma.posX - XARECTANGLE - 0.1, nFantasma.posY - YARECTANGLE, 0.0f );	
+	glEnd();
+
+	glBegin(GL_POLYGON);
+		glVertex3f(nFantasma.posX + XARECTANGLE,nFantasma.posY + YARECTANGLE, 0.0f );				
+		glVertex3f(nFantasma.posX + XARECTANGLE, nFantasma.posY - YARECTANGLE, 0.0f );
+		glVertex3f(nFantasma.posX + XARECTANGLE + 0.1, nFantasma.posY - YARECTANGLE, 0.0f );	
+	glEnd();
+}
+
 
 
 // MEtodo para dibujar el grid
@@ -403,14 +433,13 @@ bool verificarPunto(enemigo e, bala b){
 
 
 // Funcion que dado una defensa y una bala, verifica que este ultimo choque con la defensa
-bool verificarDefensa(defensa d, bala b){
-	if (( b.posX >= (d.posX - rectX) && b.posY <= (d.posY + rectY) &&
-		b.posX <= (d.posX + rectX) && b.posY >= (d.posY - rectY))){
+bool verificarDefensa(defensa d, float posX, float posY){
+	if (( posX >= (d.posX) && posY >= (d.posY) &&
+		posX <= (d.posX + 0.11f) && posY <= (d.posY + 0.08f ))){
 		return true;
 	}
 	return false;
 }
-
 
 // Funcion que dado una bala, verifica que esta colisiona con la nave fantasma
 bool verificarPuntoFantasma(bala b){
@@ -422,12 +451,25 @@ bool verificarPuntoFantasma(bala b){
 	return false;
 }
 
+bool verificarJugador(float posX, float posY) {
+	if (posX >= (traslacionNave - 0.05f) && posY >= (-0.8f - 0.035f) &&
+		posX <= (traslacionNave + 0.05f) && posY <= (-0.8f + 0.035f )) {
+	
+		for (int i = 0; i< CANT_ENEMIGOS ; i++){
+			VectEne[i].shots = 0; 
+	    }
+		jugadorVivo = false;
+		return true;
+	}
+	return false;
+}
+
 
 // Funcion que dado una bala verifica si esta choca con alguna defensa
 bool iterateDefensas(bala b){
 
 	for( vector<defensa>::iterator d = VectDefensa.begin(); d!=VectDefensa.end();){
-		if (verificarDefensa(*d, b)){
+		if (verificarDefensa(*d, b.posX, b.posY)){
 			d = VectDefensa.erase(d);
 			score -= 30;
 			return true;
@@ -490,27 +532,27 @@ void desplazamientoBalaEnemy(int x) {
 
 void killDefensa(int x){
 	
-	/*// Muerte porque bloques enemigos chocan contra las defensas
+	// Muerte porque bloques enemigos chocan contra las defensas o el jugador
 	for(int i=0; i<CANT_ENEMIGOS; i++){
 		if (VectEne[i].shots>0){
 			for( vector<defensa>::iterator d = VectDefensa.begin(); d!=VectDefensa.end();){
-				if ((*d).posX == VectEne[i].posX){
-					d = VectDefensa.erase(d);
-				}
+				if (verificarDefensa(*d,VectEne[i].posX,VectEne[i].posY)){
+ 					d = VectDefensa.erase(d);
+					VectEne[i].shots = 0;
+					break;
+				} else {
+					d++;
+ 				}	
 			}
 		}
+
+		if (VectEne[i].shots>0){
+			if (verificarJugador(VectEne[i].posX, VectEne[i].posY) || VectEne[i].posY < -0.8f + 0.035f) {
+				jugadorVivo = false;
+				VectEne[i].shots = 0;
+ 			}
+ 		}
 		
-
-	}*/
-
-	// Muerte por bala del enemigo
-	for( int i = 0; i < CANT_ENEMIGOS; i++) {
-		if (VectBalaEnemy[i].disparo && VectBalaEnemy[i].existe){
-			if (iterateDefensas(VectBalaEnemy[i])){
-				VectBalaEnemy[i].existe = false;
-				VectBalaEnemy[i].disparo = false;
-			}
-		}
 
 	}
 
@@ -606,6 +648,7 @@ void doSomething(int x) {
 				MOV_DER = false;			
 				movEneY = -0.05f;
 				movEneX = 0.0f;
+				if (velocidad >= 120) velocidad -= 70;
 			} else
 			{
 				movEneX = 0.1f;
@@ -618,6 +661,7 @@ void doSomething(int x) {
 				MOV_DER = true;			   
 				movEneY = -0.05f;
 				movEneX = 0.0f;
+				if (velocidad >= 170) velocidad -= 70;
 			} else
 			{
 				movEneX = -0.1f;
@@ -649,8 +693,20 @@ void doSomething(int x) {
 		}
 	}
 
+	// Muerte por bala del enemigo
+	for( int i = 0; i < CANT_ENEMIGOS; i++) {
+		if (VectBalaEnemy[i].disparo && VectBalaEnemy[i].existe){
+			if (iterateDefensas(VectBalaEnemy[i]) || 
+				verificarJugador(VectBalaEnemy[i].posX, VectBalaEnemy[i].posY)){
+				VectBalaEnemy[i].existe = false;
+				VectBalaEnemy[i].disparo = false;
+			}
+		}
+
+	}
+
 	glutPostRedisplay();
-	glutTimerFunc(100,doSomething,1);
+	glutTimerFunc(velocidad,doSomething,1);
 }
 
 
@@ -749,7 +805,7 @@ void render(){
  
 		drawGrid();
 	
-		if (!Winner()){
+		if ((!Winner()) && jugadorVivo){
 			//Nave del jugador
 			glPushMatrix();
 		
@@ -821,7 +877,8 @@ void render(){
 		printScore(s, -1.17, -0.9);
 
 		// Mensaje al ganar el juego
-		if (Winner()) printScore("¡YOU WIN!", -0.15, 0);
+		if (Winner() && jugadorVivo) printScore("¡YOU WIN!", -0.15, 0);
+		if (!jugadorVivo) printScore("¡YOU LOSE!", -0.15, 0);
 
 	glPopMatrix();
     glutSwapBuffers();
